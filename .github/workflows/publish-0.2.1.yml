@@ -18,10 +18,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh api -H 'Accept: application/vnd.github.raw+json' "repos/$GH_REPO/contents/packages/$ARCHIVE?ref=cfe723869c7262ba6cb0e260f831514d6dacdb56" > "$ARCHIVE"
+          curl --fail --location --retry 3 "https://raw.githubusercontent.com/$GH_REPO/cfe723869c7262ba6cb0e260f831514d6dacdb56/packages/$ARCHIVE" --output "$ARCHIVE"
           echo "215f0959c9b136eaf26525b01349460eabe1b5d16810f905c6158374a9132759  $ARCHIVE" | sha256sum --check
           for file in README.md BUILD.md; do
-            gh api -H 'Accept: application/vnd.github.raw+json' "repos/$GH_REPO/contents/$file?ref=$GITHUB_SHA" > "$file"
+            curl --fail --location --retry 3 "https://raw.githubusercontent.com/$GH_REPO/$GITHUB_SHA/$file" --output "$file"
           done
           python3 - <<'PY'
           import os
@@ -41,4 +41,4 @@ jobs:
               assert check.testzip() is None
           PY
           sha256sum "$ARCHIVE" > SHA256SUMS.txt
-          gh release create v0.2.1 "$ARCHIVE" SHA256SUMS.txt --repo "$GH_REPO" --target "cfe723869c7262ba6cb0e260f831514d6dacdb56" --title "0.2.1" --notes "FSR 4 Native AA for Valheim on Vulkan. Windows x64, 2560x1440. Includes the adapter and pinned OptiScaler runtime."
+          gh release create v0.2.1 "$ARCHIVE" SHA256SUMS.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title "0.2.1" --notes "FSR 4 Native AA for Valheim on Vulkan. Windows x64, 2560x1440. Includes the adapter and pinned OptiScaler runtime."

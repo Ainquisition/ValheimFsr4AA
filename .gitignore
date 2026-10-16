@@ -6,3 +6,6 @@ __pycache__/
 *.pyc
 work/
 runtime-candidate/
+packages/
+evidence/fix-*/
+*.log
