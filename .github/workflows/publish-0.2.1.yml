@@ -1,0 +1,44 @@
+name: Publish 0.2.1
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-0.2.1.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ARCHIVE: ValheimFsr4AA-0.2.1-win-x64.zip
+    steps:
+      - name: Publish compiled package
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -H 'Accept: application/vnd.github.raw+json' "repos/$GH_REPO/contents/packages/$ARCHIVE?ref=cfe723869c7262ba6cb0e260f831514d6dacdb56" > "$ARCHIVE"
+          echo "215f0959c9b136eaf26525b01349460eabe1b5d16810f905c6158374a9132759  $ARCHIVE" | sha256sum --check
+          for file in README.md BUILD.md; do
+            gh api -H 'Accept: application/vnd.github.raw+json' "repos/$GH_REPO/contents/$file?ref=$GITHUB_SHA" > "$file"
+          done
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          archive = Path(os.environ["ARCHIVE"])
+          temp = archive.with_suffix(".tmp")
+          replacements = {"README.md", "BUILD.md"}
+          with ZipFile(archive) as source, ZipFile(temp, "w", ZIP_DEFLATED) as output:
+              for item in source.infolist():
+                  if item.filename not in replacements and not item.filename.startswith("evidence/fix-0.2.1/"):
+                      output.writestr(item, source.read(item))
+              for name in sorted(replacements):
+                  output.write(name, name)
+          temp.replace(archive)
+          with ZipFile(archive) as check:
+              assert check.testzip() is None
+          PY
+          sha256sum "$ARCHIVE" > SHA256SUMS.txt
+          gh release create v0.2.1 "$ARCHIVE" SHA256SUMS.txt --repo "$GH_REPO" --target "cfe723869c7262ba6cb0e260f831514d6dacdb56" --title "0.2.1" --notes "FSR 4 Native AA for Valheim on Vulkan. Windows x64, 2560x1440. Includes the adapter and pinned OptiScaler runtime."
