@@ -6,7 +6,7 @@ FSR 4 Native AA for Valheim through OptiScaler. The game renders with Vulkan; Op
 
 Requires BepInEx. Launch with `Launch-adapter.cmd`, press F9 to toggle AA, and select FSR through OptiScaler. Installation scripts preserve backups and refuse unknown DLLs.
 
-Tested on Windows 10 with an RX 9070 XT, Valheim 1.0.20 and BepInEx 5.4.23.5. GPU tests confirm FSR4 4.1.1 Native AA at 1.00×. The owner also tested camera movement, teleporting and alt-tab.
+Tested on Windows 10 with an RX 9070 XT, Valheim 1.0.20 and BepInEx 5.4.23.5. GPU tests confirm FSR4 4.1.1 Native AA at 1.00×.
 
 Experimental: fixed 1440p, synchronous GPU waits and a known output-alpha issue. See [verification notes](BUILD.md#verify). No FPS gain is promised.
 
