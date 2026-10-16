@@ -1,0 +1,10 @@
+[
+  {
+    "Path": "bin-adapter/ValheimFsr4AA.Adapter.dll",
+    "Hash": "8509122B1624F4D85CB740C513E176DC7F5CE4E8709D405847EE9133530088ED"
+  },
+  {
+    "Path": "bin-adapter/ValheimFsr4AA.Native.dll",
+    "Hash": "2AD44352745157F1BA903E8CE975F217D763A6D63636205877718888DBD8BAE4"
+  }
+]

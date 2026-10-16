@@ -1,0 +1,11 @@
+{
+  "OptiScaler": "0e42d5955405360157c22154b4a13fdf3fc196a6",
+  "NativeRenderingPlugin": "522254181faf188efa8b50c3e3bf6fce720b26e4",
+  "Vulkan-Headers": "d64e9e156ac818c19b722ca142230b68e3daafe3",
+  "Game": "Valheim 1.0.20 / Steam build 25909357",
+  "Unity": "6000.0.75f1",
+  "BepInEx": "5.4.23.5",
+  "FidelityFX-SDK": "c6efa6bf7f2027b3ec94f28578bb5965eabb9e55",
+  "FidelityFX-SDK-v2": "60f4ea81909200d8542eca14dccb2628b763a9a3",
+  "stage": "0.2.1; GPU fixture verified; owner reports successful world, camera, teleport and alt-tab checks"
+}

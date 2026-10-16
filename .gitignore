@@ -1,0 +1,8 @@
+bin/
+bin-adapter/
+src/bin/
+src/obj/
+__pycache__/
+*.pyc
+work/
+runtime-candidate/
