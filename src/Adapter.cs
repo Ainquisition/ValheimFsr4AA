@@ -8,7 +8,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 
-[BepInPlugin("local.valheim.fsr4aa.adapter", "Valheim OptiScaler AA Adapter", "0.2.1")]
+[BepInPlugin("local.valheim.fsr4aa.adapter", "Valheim OptiScaler AA Adapter", "0.2.2")]
 public sealed class Adapter : BaseUnityPlugin
 {
     const string Native = "ValheimFsr4AA.Native";
@@ -52,7 +52,7 @@ public sealed class Adapter : BaseUnityPlugin
         catch (Exception e) { Block(e.ToString()); return; }
         harmony = new Harmony("local.valheim.fsr4aa.adapter");
         harmony.Patch(AccessTools.Method(typeof(TaaComponent), "Render"), prefix: new HarmonyMethod(typeof(Adapter), nameof(Render)));
-        Logger.LogInfo("adapter=LOADED version=0.2.1 slots=3 coordinates=FSR_TOP_LEFT; F9 toggles; input=NOT_ATTEMPTED fsr4=NOT_VERIFIED");
+        Logger.LogInfo("adapter=LOADED version=0.2.2 optiLoaded=" + (VF_AdapterHealthy() == 1) + " slots=3 coordinates=FSR_TOP_LEFT; F9 toggles; input=NOT_ATTEMPTED fsr4=NOT_VERIFIED");
     }
     bool CompetingScaler()
     {
@@ -113,7 +113,7 @@ public sealed class Adapter : BaseUnityPlugin
         if (CompetingScaler()) { Block("GraphicsOverdrive has ExclusiveControl or an active native scaler. Ordinary TAA continues."); return true; }
         if (SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Vulkan || !SystemInfo.usesReversedZBuffer || QualitySettings.activeColorSpace != ColorSpace.Linear)
         { Block("Requires Vulkan, reversed Z and linear color"); return true; }
-        if (VF_AdapterHealthy() != 1) { Block("Pinned runtime not loaded: VF_OPTI_DLL missing, foreign dxgi.dll present, or GPU transaction failed"); return true; }
+        if (VF_AdapterHealthy() != 1) { Block("Pinned runtime not loaded from ValheimFsr4AA-runtime or explicit override, foreign dxgi.dll present, or GPU transaction failed"); return true; }
         var depth = Shader.GetGlobalTexture("_CameraDepthTexture");
         var motion = Shader.GetGlobalTexture("_CameraMotionVectorsTexture");
         if (!source || !destination || !depth || !motion || source.width != 2560 || source.height != 1440 ||

@@ -17,9 +17,9 @@ Defaults target `D:\SteamLibrary\steamapps\common\Valheim` and the Thunderstore 
 
 If the checked legacy OptiScaler 0.9.4 / GraphicsOverdrive stack conflicts, use `python switch-stack.py install` instead of the final command. It backs up the known proxy DLL and settings, renames that proxy, and sets `ExclusiveControl=false`, `Scaler=Vanilla`. Other proxy versions are refused.
 
-Start `Launch-adapter.cmd`, load a world at 2560×1440 and press F9. Select FSR in OptiScaler. Check the FSR4 Native-AA 1.00× watermark; a successful NGX call alone does not identify the active backend. Ordinary mod-manager launch does not set the required early-loading environment variable.
+Start with Thunderstore’s Modded button using `-force-vulkan`, load a world at 2560×1440 and press F9. Select FSR in OptiScaler. Check the FSR4 Native-AA 1.00× watermark; a successful NGX call alone does not identify the active backend. Version 0.2.2 loads the runtime beside the game automatically; no environment variable or separate launcher is required.
 
-Update an installed 0.2.0 with `python upgrade-adapter.py`.
+To update 0.2.0 or 0.2.1, close the game, extract the new package into a separate folder and run `python upgrade-adapter.py`. Previous DLLs and the live ini are saved in `ValheimFsr4AA-backup-0.2.2`.
 
 ## Remove
 
@@ -46,11 +46,11 @@ Commits and dependency gitlinks are pinned in `sources.lock.json`. Game and BepI
 ```powershell
 python src/test_adapter_deploy.py
 python src/test_switch_stack.py
-.\checks/run.ps1 -NgxContext -RuntimePackage runtime-candidate -DependencyRoot work
+.\checks/run.ps1 -NgxContext -InstalledLayout -RuntimePackage runtime-candidate -DependencyRoot work
 ```
 
 Close the game before the GPU test. It uses an isolated local scene and test-only CPU readback. The adapter does not read textures back each frame. `test_preload.py` needs an original matching `globalgamemanagers`; the historical `test_deploy.py` needs a saved diagnostic 0.1.0 game/profile fixture and a scratch directory. All four Python checks passed before publication.
 
-Version 0.2.1 fixes alternating FSR/TAA frames, repeated history resets and the inverted watermark. Fixture tests verify RGB orientation, frame-slot ownership and processing without history resets. World, camera, teleport and alt-tab checks were reported by the owner; separate timings for those scenarios were not recorded.
+Version 0.2.2 adds automatic loading for Thunderstore and pins the dependency directory. Its GPU fixture passed with VF_OPTI_DLL absent, including FSR4 Native-AA 1.00X, nine queued frames and reset=0. A world launched through Thunderstore after this update has not yet been verified. Version 0.2.1 fixes alternating FSR/TAA frames, repeated history resets and the inverted watermark. Fixture tests verify RGB orientation, frame-slot ownership and processing without history resets. Separate timings for world, camera, teleport and alt-tab scenarios were not recorded.
 
 Outside 2560×1440 the adapter falls back to ordinary TAA. GPU fence waits remain synchronous. Output alpha repeats the red channel in the fixture; RGB is verified. Long stress tests and other mod combinations remain untested.

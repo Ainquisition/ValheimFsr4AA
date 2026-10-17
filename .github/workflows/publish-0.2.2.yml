@@ -1,0 +1,25 @@
+name: Publish 0.2.2
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-0.2.2.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ARCHIVE: ValheimFsr4AA-0.2.2-win-x64.zip
+    steps:
+      - name: Publish compiled package
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/git/blobs/34728bd08e5dc4360640af67be0b680cd96aa68a" --jq .content | base64 --decode > "$ARCHIVE"
+          echo "04f3cf2cc6779d54f4d5bbf13fb621224f30fa72643cf4e3f88d5f0deb51d900  $ARCHIVE" > SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+          python3 -c 'import os,zipfile; assert zipfile.ZipFile(os.environ["ARCHIVE"]).testzip() is None'
+          gh release create v0.2.2 "$ARCHIVE" SHA256SUMS.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title "0.2.2" --notes 'Adds Thunderstore Modded launch support and fixes the pinned dependency path. Close Valheim and run python upgrade-adapter.py from the extracted package to update.'

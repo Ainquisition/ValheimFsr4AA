@@ -7,5 +7,5 @@
   "BepInEx": "5.4.23.5",
   "FidelityFX-SDK": "c6efa6bf7f2027b3ec94f28578bb5965eabb9e55",
   "FidelityFX-SDK-v2": "60f4ea81909200d8542eca14dccb2628b763a9a3",
-  "stage": "0.2.1; GPU fixture verified; owner reports successful world, camera, teleport and alt-tab checks"
+  "stage": "0.2.2; no-environment Vulkan GPU fixture and full rollback verified; Thunderstore world test pending"
 }

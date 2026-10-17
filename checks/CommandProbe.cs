@@ -49,7 +49,8 @@ public sealed class CommandProbe : BaseUnityPlugin
         var texture = new RenderTexture(32, 32, 0, RenderTextureFormat.ARGBHalf);
         texture.Create(); camera.targetTexture = texture;
         var message = new StringBuilder(4096);
-        bool ngx = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VF_OPTI_DLL"));
+        bool ngx = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VF_OPTI_DLL")) || Environment.GetEnvironmentVariable("VF_QUEUE_ONLY") == "1";
+        Log("LAUNCH optiOverridePresent=" + !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VF_OPTI_DLL")));
         RenderTexture depth = null, motion = null, result = null, consumed = null;
         if (ngx)
         {

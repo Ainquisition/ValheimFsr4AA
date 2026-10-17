@@ -233,16 +233,25 @@ API void UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* interfaces)
 #ifdef VF_NGX_PROBE
     wchar_t path[4096]{};
     DWORD size = GetEnvironmentVariableW(L"VF_OPTI_DLL", path, 4096);
-    if (size > 0 && size < 4096)
+    wchar_t executable[4096]{};
+    DWORD executableSize = GetModuleFileNameW(nullptr, executable, 4096);
+    std::wstring directory;
+    if (executableSize > 0 && executableSize < 4096)
+    {
+        directory = executable;
+        directory.resize(directory.find_last_of(L"\\/") + 1);
+    }
+    // Unity preloads this plugin before Vulkan creation, including mod-manager launches.
+    std::wstring runtime = size == 0 ? directory + L"ValheimFsr4AA-runtime\\OptiScaler.dll" : path;
+    if (size >= 4096 || directory.empty()) optiLoadError = ERROR_BAD_PATHNAME;
+    else
     {
 #ifdef VF_LIVE_ADAPTER
-        wchar_t executable[4096]{}; GetModuleFileNameW(nullptr, executable, 4096);
-        std::wstring proxy(executable);
-        proxy.resize(proxy.find_last_of(L"\\/") + 1); proxy += L"dxgi.dll";
+        std::wstring proxy = directory + L"dxgi.dll";
         if (GetFileAttributesW(proxy.c_str()) != INVALID_FILE_ATTRIBUTES) optiLoadError = ERROR_ALREADY_EXISTS;
         else
 #endif
-        { opti = LoadLibraryW(path); optiLoadError = opti ? 0 : GetLastError(); }
+        { opti = LoadLibraryW(runtime.c_str()); optiLoadError = opti ? 0 : GetLastError(); }
     }
     // Keep OptiScaler loaded until process exit: its Vulkan hooks outlive this test context.
 #endif

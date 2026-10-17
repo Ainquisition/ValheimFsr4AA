@@ -3,6 +3,7 @@ import argparse
 import copy
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 from deploy import ROOT, file_hash, write
@@ -27,10 +28,18 @@ def upgrade(game, profile):
     updated = copy.deepcopy(state)
     for entry, source in zip(updated["files"], sources):
         entry["after"] = expected[source.name]
-    if updated == state:
+    ini = game / "ValheimFsr4AA-runtime/OptiScaler.ini"
+    original_ini = ini.read_bytes()
+    updated_ini, replacements = re.subn(rb"(?m)^OptiDllPath\s*=\s*[^\r\n]*", b"OptiDllPath = ValheimFsr4AA-runtime/OptiScaler", original_ini)
+    require(replacements == 1, "Expected exactly one OptiDllPath setting")
+    ini_entries = [entry for entry in updated["files"] if entry["path"] == str(ini)]
+    require(len(ini_entries) == 1, "Runtime ini is not owned by this installation")
+    # The UI can edit the live ini. Full-stack restore first restores the packaged ini.
+    ini_entries[0]["after"] = file_hash(ROOT / "runtime-candidate/OptiScaler.ini")
+    if updated == state and updated_ini == original_ini:
         print("Already upgraded; both DLL hashes match")
         return
-    backup = game / "ValheimFsr4AA-backup-0.2.1"
+    backup = game / "ValheimFsr4AA-backup-0.2.2"
     require(not backup.exists(), "Upgrade backup already exists; preserved")
     saved = [p.read_bytes() for p in paths]
     backup.mkdir()
@@ -38,20 +47,24 @@ def upgrade(game, profile):
         write(backup / f"{index}.bin", data)
         require(file_hash(backup / f"{index}.bin") == state["files"][index]["after"], "Backup hash mismatch")
     write(backup / "active-manifest-before.json", original)
+    write(backup / "OptiScaler-before.ini", original_ini)
     require((backup / "active-manifest-before.json").read_bytes() == original, "Manifest backup mismatch")
     try:
         require(active.read_bytes() == original, "Manifest changed during backup")
+        require(ini.read_bytes() == original_ini, "Runtime ini changed during backup")
         for path, data, entry in zip(paths, contents, state["files"]):
             require(file_hash(path) == entry["after"], "DLL changed during backup")
             write(path, data)
         require(all(file_hash(p) == e["after"] for p, e in zip(paths, updated["files"])), "Post-upgrade hash mismatch")
+        write(ini, updated_ini)
         write(active, json.dumps(updated, indent=2).encode())
         write(backup / "manifest.json", json.dumps({"state": "installed", "previous": state["files"][:2],
-              "current": updated["files"][:2]}, indent=2).encode())
+              "current": updated["files"][:2], "ini": str(ini)}, indent=2).encode())
     except Exception:
         for path, data in zip(paths, saved):
             write(path, data)
         write(active, original)
+        write(ini, original_ini)
         raise
     print("Upgraded two own DLLs. Previous DLLs and manifest:", backup)
 

@@ -20,6 +20,7 @@ foreach ($name in $files.Keys) {
     Copy-Item -LiteralPath $files[$name] -Destination "$target/$name"
 }
 $ini = Get-Content "$repo/OptiScaler.ini" -Raw
+$ini = $ini.Replace('OptiDllPath=auto','OptiDllPath=ValheimFsr4AA-runtime/OptiScaler')
 $ini = $ini.Replace('VulkanUpscaler=auto','VulkanUpscaler=ffx_12').Replace('LogToFile=auto','LogToFile=true').Replace('LogLevel=auto','LogLevel=1')
 $ini = $ini.Replace('UpscalerIndex=auto','UpscalerIndex=0').Replace('FsrAgilitySDKUpgrade=auto','FsrAgilitySDKUpgrade=true').Replace('Fsr4EnableWatermark=auto','Fsr4EnableWatermark=true')
 $ini = $ini.Replace('FGInput=auto','FGInput=nofg').Replace('FGOutput=auto','FGOutput=nofg')

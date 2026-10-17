@@ -1,5 +1,6 @@
 param(
     [switch]$NgxContext,
+    [switch]$InstalledLayout,
     [string]$RuntimePackage,
     [string]$Game = 'D:\SteamLibrary\steamapps\common\Valheim',
     [string]$Core = "$env:APPDATA\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Default\BepInEx\core",
@@ -12,6 +13,7 @@ $Scratch = [IO.Path]::GetFullPath($Scratch)
 $DependencyRoot = [IO.Path]::GetFullPath($DependencyRoot)
 if (Test-Path $Scratch) { throw 'Scratch must be a new directory; existing files were preserved' }
 if (Get-Process valheim -ErrorAction SilentlyContinue) { throw 'Close Valheim before this GPU test' }
+if ($InstalledLayout -and !$NgxContext) { throw 'InstalledLayout requires NgxContext' }
 function Run([string]$Program, [string[]]$Arguments) {
     & $Program @Arguments
     if ($LASTEXITCODE -ne 0) { throw "$Program failed ($LASTEXITCODE)" }
@@ -54,16 +56,19 @@ $ngxDefine = if ($NgxContext) { '/DVF_NGX_PROBE /DVF_LIVE_ADAPTER' } else { '' }
 if ($NgxContext) {
     $runtime = if ($RuntimePackage) { [IO.Path]::GetFullPath($RuntimePackage) } else { "$DependencyRoot/OptiScaler/x64/Release/a" }
     if (!(Test-Path "$runtime/OptiScaler.dll")) { throw 'Build pinned OptiScaler before -NgxContext' }
-    Copy-Item "$runtime/OptiScaler.dll" $stage
-    Copy-Item "$runtime/OptiScaler" $stage -Recurse
+    $runtimeTarget = if ($InstalledLayout) { "$stage/ValheimFsr4AA-runtime" } else { $stage }
+    New-Item -ItemType Directory -Force $runtimeTarget | Out-Null
+    Copy-Item "$runtime/OptiScaler.dll" $runtimeTarget
+    Copy-Item "$runtime/OptiScaler" $runtimeTarget -Recurse
     $ini = Get-Content "$DependencyRoot/OptiScaler/OptiScaler.ini" -Raw
+    if ($InstalledLayout) { $ini = $ini.Replace('OptiDllPath=auto','OptiDllPath=ValheimFsr4AA-runtime/OptiScaler') }
     $ini = $ini.Replace('VulkanUpscaler=auto','VulkanUpscaler=ffx_12').Replace('LogToFile=auto','LogToFile=true').Replace('LogLevel=auto','LogLevel=1')
     $ini = $ini.Replace('UpscalerIndex=auto','UpscalerIndex=0').Replace('FsrAgilitySDKUpgrade=auto','FsrAgilitySDKUpgrade=true').Replace('Fsr4EnableWatermark=auto','Fsr4EnableWatermark=true')
     # Disable calls to NVIDIA runtime and all frame-generation inputs/outputs in this context-only check.
     $ini = $ini.Replace('FGInput=auto','FGInput=nofg').Replace('FGOutput=auto','FGOutput=nofg')
     $ini = [regex]::Replace($ini, '(?ms)(\[FrameGen\].*?^Enabled=)auto', '${1}false')
     $ini = [regex]::Replace($ini, '(?ms)(\[DLSS\].*?^Enabled=)auto', '${1}false')
-    Set-Content "$stage/OptiScaler.ini" $ini
+    Set-Content "$runtimeTarget/OptiScaler.ini" $ini
 }
 $commands = @"
 @echo off
@@ -91,7 +96,7 @@ foreach ($mode in $modes) {
     try {
         $env:VF_COMMAND_RESULT = "$Scratch/$mode-results.log"
         $env:VF_QUEUE_ONLY = if ($NgxContext) { '1' } else { '0' }
-        $env:VF_OPTI_DLL = if ($NgxContext) { "$stage/OptiScaler.dll" } else { $null }
+        $env:VF_OPTI_DLL = if ($NgxContext -and !$InstalledLayout) { "$stage/OptiScaler.dll" } else { $null }
         $process = Start-Process "$stage/valheim.exe" -WorkingDirectory $stage -ArgumentList $arguments -WindowStyle Hidden -PassThru
     } finally { $env:VF_COMMAND_RESULT = $previous; $env:VF_QUEUE_ONLY = $previousQueue; $env:VF_OPTI_DLL = $previousOpti }
     if (!$process.WaitForExit(40000)) { $process.Kill(); $process.WaitForExit(); throw 'Isolated child timed out' }

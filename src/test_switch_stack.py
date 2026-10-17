@@ -41,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix="stack-rollback-check-",dir=work) as fol
     active.write_text(json.dumps(state))
     updater.upgrade(game,profile)
     updater.upgrade(game,profile)
-    assert (game / "ValheimFsr4AA-backup-0.2.1/0.bin").read_bytes() == b"previous own DLL fixture 0"
+    assert (game / "ValheimFsr4AA-backup-0.2.2/0.bin").read_bytes() == b"previous own DLL fixture 0"
     assert native.read_bytes() == (root / "bin-adapter/ValheimFsr4AA.Native.dll").read_bytes()
     # Exercise safe uninstall after the runtime UI modifies its own ini.
     ini = game / "ValheimFsr4AA-runtime/OptiScaler.ini"
